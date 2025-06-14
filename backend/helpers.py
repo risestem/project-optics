@@ -14,9 +14,12 @@ def animate_scene(scene_code):
     try:
         cmd = [
             'manim',
-            '-pql',
+            '-qh',
             temp_file_path,
-            'video'
+            'video',
+            '--media_dir', '../media',
+            '--output_file', 'video.mp4'
+            '--disable_caching'
         ]
         subprocess.run(cmd, check=True)
     finally:
