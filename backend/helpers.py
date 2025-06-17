@@ -24,3 +24,6 @@ def animate_scene(scene_code):
         subprocess.run(cmd, check=True)
     finally:
         os.remove(temp_file_path)
+
+def fetch_history(session_id):
+    pass
