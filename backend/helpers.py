@@ -1,29 +1,52 @@
-import tempfile
-import subprocess
+import requests
+from google.auth.transport.requests import Request
+from google.oauth2 import id_token
+from google.oauth2 import service_account
 
-def animate_scene(scene_code):
-    print(scene_code)
-    # Always ensure import is present
-    if "from manim import *" not in scene_code:
-        scene_code = "from manim import *\n" + scene_code
+def cloud_render(scene_code, id):
+    service_account_file = 'key.json'
+    target_audience = 'https://render-api-431158145985.us-east1.run.app'
 
-    with tempfile.NamedTemporaryFile('w', prefix='manim_', suffix='.py', delete=False) as temp_file:
-        temp_file.write(scene_code)
-        temp_file_path = temp_file.name
+    # Get ID token for Cloud Run
+    credentials = service_account.IDTokenCredentials.from_service_account_file(
+        service_account_file,
+        target_audience=target_audience
+    )
 
+    # Refresh token
+    request = Request()
+    credentials.refresh(request)
+    id_token_str = credentials.token
+
+    url = f"{target_audience}/render"
+    headers = {'Authorization': f'Bearer {id_token_str}'}
+    data = {
+        "code": scene_code,
+        "id": id
+    }
+
+    response = requests.post(url, headers=headers, json=data)
     try:
-        cmd = [
-            'manim',
-            '-qh',
-            temp_file_path,
-            'video',
-            '--media_dir', '../media',
-            '--output_file', 'video.mp4'
-            '--disable_caching'
-        ]
-        subprocess.run(cmd, check=True)
-    finally:
-        os.remove(temp_file_path)
+        return response.json()
+    except Exception:
+        return {"error": f"Request failed with status {response.status_code}", "details": response.text}
+
 
 def fetch_history(session_id):
     pass
+
+if __name__ == "__main__":
+    scene_code = """
+from manim import *
+
+class HelloWorld(Scene):
+    def construct(self):
+        text = Text("Hello, World!")
+        self.play(Write(text))
+        self.wait(1)
+"""
+    session_id = "test_hello_1a2b3c4d"
+    result = cloud_render(scene_code, session_id)
+    print(result)
+
+    

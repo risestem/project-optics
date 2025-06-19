@@ -13,6 +13,7 @@ def animate_scene(scene_code, id):
         temp_file.write(scene_code)
         temp_file_path = temp_file.name
 
+    file_name = os.path.splitext(os.path.basename(temp_file_path))[0]
     try:
         cmd = [
             'manim',
@@ -24,9 +25,10 @@ def animate_scene(scene_code, id):
             '--disable_caching'
         ]
         subprocess.run(cmd, check=True)
-    finally:
-        os.remove(temp_file_path)
-    return f'/tmp/{id}/{id}.mp4'
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+    return f'/tmp/{id}/videos/{file_name}/1080p60/{id}.mp4'
 
 def upload_to_gcs(file_path, bucket_name, destination_blob_name):
     storage_client = storage.Client()
