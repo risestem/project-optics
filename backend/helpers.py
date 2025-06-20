@@ -2,6 +2,7 @@ import requests
 from google.auth.transport.requests import Request
 from google.oauth2 import id_token
 from google.oauth2 import service_account
+from google.cloud import storage
 
 def cloud_render(scene_code, id):
     service_account_file = 'key.json'
@@ -31,22 +32,14 @@ def cloud_render(scene_code, id):
     except Exception:
         return {"error": f"Request failed with status {response.status_code}", "details": response.text}
 
+def clear_bucket(session_id):
+    credentials = service_account.Credentials.from_service_account_file("key.json")
+    storage_client = storage.Client(credentials=credentials)
+    bucket = storage_client.bucket("manim-renders")
+    blob = bucket.blob(f"{session_id}.mp4")
+    blob.delete()
 
 def fetch_history(session_id):
     pass
-
-if __name__ == "__main__":
-    scene_code = """
-from manim import *
-
-class HelloWorld(Scene):
-    def construct(self):
-        text = Text("Hello, World!")
-        self.play(Write(text))
-        self.wait(1)
-"""
-    session_id = "test_hello_1a2b3c4d"
-    result = cloud_render(scene_code, session_id)
-    print(result)
 
     
