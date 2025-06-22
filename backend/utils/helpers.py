@@ -1,6 +1,5 @@
 import requests
 from google.auth.transport.requests import Request
-from google.oauth2 import id_token
 from google.oauth2 import service_account
 from google.cloud import storage
 
