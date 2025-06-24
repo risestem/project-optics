@@ -2,6 +2,7 @@ import requests
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from google.cloud import storage
+import json
 
 def cloud_render(scene_code, id):
     service_account_file = 'key.json'
@@ -39,6 +40,8 @@ def clear_bucket(session_id):
     blob.delete()
 
 def fetch_history(session_id):
-    pass
+    with open("chat_history.json", "r") as f:
+        history = json.load(f)
+    return history.get(session_id, [])
 
     
