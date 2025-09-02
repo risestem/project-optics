@@ -44,4 +44,12 @@ def fetch_history(session_id):
         history = json.load(f)
     return history.get(session_id, [])
 
-    
+def generate_session():
+    #fetch latest session id
+    with open("latest_session.txt", "r") as file:
+        latest_session = int(file.read().strip())
+    new_session = latest_session + 1
+    with open("latest_session.txt", "w") as file:
+        file.write(str(new_session))
+
+    return new_session
