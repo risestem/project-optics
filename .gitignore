@@ -2,3 +2,4 @@ __pycache__/
 media/
 main.py
 key.json
+package-lock.json

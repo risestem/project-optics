@@ -126,7 +126,7 @@ html, body {
     margin-left: 0;
     cursor: pointer;
     height: 54px;
-    display: flex;
+    display:.flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
