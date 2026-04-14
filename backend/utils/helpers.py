@@ -1,8 +1,37 @@
+import os
+import subprocess
+import tempfile
 import requests
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from google.cloud import storage
 import json
+
+def animate_scene(scene_code, id):
+    if "from manim import *" not in scene_code:
+        scene_code = "from manim import *\n" + scene_code
+
+    with tempfile.NamedTemporaryFile('w', prefix='manim_', suffix='.py', delete=False) as temp_file:
+        temp_file.write(scene_code)
+        temp_file_path = temp_file.name
+
+    file_name = os.path.splitext(os.path.basename(temp_file_path))[0]
+    try:
+        cmd = [
+            'manim',
+            '-qh',
+            temp_file_path,
+            'LessonScene',
+            '--media_dir', f'/tmp/{id}',
+            '--output_file', f'{id}.mp4',
+            '--disable_caching',
+        ]
+        subprocess.run(cmd, check=True)
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+    return f'/tmp/{id}/videos/{file_name}/1080p60/{id}.mp4'
+
 
 def cloud_render(scene_code, id):
     service_account_file = 'key.json'
