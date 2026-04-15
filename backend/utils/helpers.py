@@ -6,11 +6,7 @@ import json
 import uuid
 
 def clear_bucket(session_id):
-    credentials = service_account.Credentials.from_service_account_file("key.json")
-    storage_client = storage.Client(credentials=credentials)
-    bucket = storage_client.bucket("manim-renders")
-    blob = bucket.blob(f"{session_id}.mp4")
-    blob.delete()
+    pass
 
 def fetch_history(session_id):
     with open("chat_history.json", "r") as f:

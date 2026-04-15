@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+modal
+google-genai
+google-auth
+requests
