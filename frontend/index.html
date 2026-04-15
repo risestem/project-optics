@@ -2,24 +2,564 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Visual AI</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Optics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* Catppuccin Mocha */
+      --rosewater: #f5e0dc;
+      --flamingo: #f2cdcd;
+      --pink: #f5c2e7;
+      --mauve: #cba6f7;
+      --red: #f38ba8;
+      --maroon: #eba0ac;
+      --peach: #fab387;
+      --yellow: #f9e2af;
+      --green: #a6e3a1;
+      --teal: #94e2d5;
+      --sky: #89dceb;
+      --sapphire: #74c7ec;
+      --blue: #89b4fa;
+      --lavender: #b4befe;
+      --text: #cdd6f4;
+      --subtext1: #bac2de;
+      --subtext0: #a6adc8;
+      --overlay2: #9399b2;
+      --overlay1: #7f849c;
+      --overlay0: #6c7086;
+      --surface2: #585b70;
+      --surface1: #45475a;
+      --surface0: #313244;
+      --base: #1e1e2e;
+      --mantle: #181825;
+      --crust: #11111b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--base);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 380px;
+      min-width: 380px;
+      height: 100vh;
+      background: var(--mantle);
+      border-right: 1px solid var(--surface0);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--surface0);
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--mauve);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-mark svg {
+      width: 16px;
+      height: 16px;
+      fill: var(--crust);
+    }
+
+    .logo-text {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: var(--text);
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      background: var(--surface0);
+      border: 1px solid var(--surface1);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .search-box input::placeholder {
+      color: var(--overlay0);
+    }
+
+    .search-box input:focus {
+      border-color: var(--mauve);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--overlay0);
+    }
+
+    .search-submit {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--mauve);
+      border: none;
+      border-radius: 6px;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .search-box input:not(:placeholder-shown) ~ .search-submit {
+      opacity: 1;
+    }
+
+    .search-submit:hover {
+      background: var(--lavender);
+    }
+
+    .search-submit svg {
+      width: 14px;
+      height: 14px;
+      fill: var(--crust);
+    }
+
+    .steps-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--surface1) transparent;
+    }
+
+    .steps-container::-webkit-scrollbar { width: 4px; }
+    .steps-container::-webkit-scrollbar-track { background: transparent; }
+    .steps-container::-webkit-scrollbar-thumb { background: var(--surface1); border-radius: 4px; }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      padding: 40px 24px;
+    }
+
+    .empty-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: var(--surface0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    .empty-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--overlay0);
+    }
+
+    .empty-state h3 {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--subtext0);
+      margin-bottom: 4px;
+    }
+
+    .empty-state p {
+      font-size: 12.5px;
+      color: var(--overlay0);
+      line-height: 1.5;
+      max-width: 220px;
+    }
+
+    .topic-label {
+      padding: 10px 14px 6px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--overlay0);
+    }
+
+    .step-card {
+      padding: 12px 14px;
+      margin-bottom: 2px;
+      border-radius: 8px;
+      border-left: 2px solid transparent;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .step-card:hover {
+      background: var(--surface0);
+    }
+
+    .step-card.active {
+      background: var(--surface0);
+      border-left-color: var(--mauve);
+    }
+
+    .step-card.active .step-indicator {
+      background: var(--mauve);
+      color: var(--crust);
+      border-color: var(--mauve);
+    }
+
+    .step-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .step-indicator {
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      border: 1px solid var(--surface2);
+      background: var(--surface0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--subtext0);
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .step-timestamp {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--overlay0);
+      margin-left: auto;
+    }
+
+    .step-card.active .step-timestamp {
+      color: var(--mauve);
+    }
+
+    .step-explanation {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--subtext0);
+      padding-left: 32px;
+    }
+
+    .step-card.active .step-explanation {
+      color: var(--text);
+    }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 14px;
+    }
+
+    .loader {
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--surface2);
+      border-top-color: var(--mauve);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      font-size: 13px;
+      color: var(--overlay0);
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--base);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .video-wrapper {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .video-wrapper video {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 8px;
+      background: var(--crust);
+    }
+
+    .video-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--overlay0);
+    }
+
+    .video-placeholder svg {
+      width: 48px;
+      height: 48px;
+      opacity: 0.25;
+    }
+
+    .video-placeholder span {
+      font-size: 13px;
+    }
+
+    .progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--surface0);
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--mauve);
+      width: 0%;
+      transition: width 0.3s linear;
+    }
+  </style>
 </head>
 <body>
-    <video id="resultVideo" autoplay muted loop playsinline></video>
-    
-    <div id="logoContainer">
-      <img src="public/opticsLogo1.png" alt="RISE Logo" id="riseLogo" />
-    </div>
-    
-    <div id="floatingBar">
-      <form id="promptForm">
-        <input type="text" id="promptInput" placeholder="Describe a concept..." />
-        <button type="submit">▶</button>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-row">
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <span class="logo-text">optics</span>
+      </div>
+      <form class="search-box" id="promptForm">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="promptInput" placeholder="What do you want to learn?" autocomplete="off" />
+        <button type="submit" class="search-submit">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
       </form>
     </div>
-  
-    <script src="script.js"></script>
-  </body>
-  
+
+    <div class="steps-container" id="stepsContainer">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <h3>No lesson loaded</h3>
+        <p>Type a topic above to generate a visual explanation</p>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="video-wrapper" id="videoWrapper">
+      <div class="video-placeholder" id="videoPlaceholder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="4"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+        <span>Your lesson will appear here</span>
+      </div>
+    </div>
+    <div class="progress-bar" id="progressBar" style="display:none">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </main>
+
+  <script>
+    const API_URL = 'https://project-optics.onrender.com';
+
+    const promptForm = document.getElementById('promptForm');
+    const promptInput = document.getElementById('promptInput');
+    const stepsContainer = document.getElementById('stepsContainer');
+    const videoWrapper = document.getElementById('videoWrapper');
+    const videoPlaceholder = document.getElementById('videoPlaceholder');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+
+    let videoEl = null;
+    let segments = [];
+    let activeStep = -1;
+
+    promptForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const topic = promptInput.value.trim();
+      if (!topic) return;
+
+      showLoading();
+
+      try {
+        const res = await fetch(`${API_URL}/lesson`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic }),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          showError(data.error);
+          return;
+        }
+
+        segments = data.segments;
+        renderSteps(data.topic, data.segments);
+        loadVideo(data.video_url);
+      } catch (err) {
+        showError('Something went wrong. Try again.');
+        console.error(err);
+      }
+    });
+
+    function showLoading() {
+      stepsContainer.innerHTML = `
+        <div class="loading-container">
+          <div class="loader"></div>
+          <span class="loading-text">Generating lesson...</span>
+        </div>
+      `;
+      videoPlaceholder.querySelector('span').textContent = 'Rendering animation...';
+    }
+
+    function showError(msg) {
+      stepsContainer.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+          <h3>Error</h3>
+          <p>${msg}</p>
+        </div>
+      `;
+    }
+
+    function renderSteps(topic, steps) {
+      let html = `<div class="topic-label">${topic}</div>`;
+
+      steps.forEach((step, i) => {
+        const startMin = Math.floor(step.start_time_seconds / 60);
+        const startSec = String(step.start_time_seconds % 60).padStart(2, '0');
+        const timestamp = `${startMin}:${startSec}`;
+
+        html += `
+          <div class="step-card${i === 0 ? ' active' : ''}" data-index="${i}" onclick="seekToStep(${i})">
+            <div class="step-top">
+              <div class="step-indicator">${step.step_number}</div>
+              <span class="step-timestamp">${timestamp}</span>
+            </div>
+            <div class="step-explanation">${step.explanation}</div>
+          </div>
+        `;
+      });
+
+      stepsContainer.innerHTML = html;
+      activeStep = 0;
+    }
+
+    function loadVideo(url) {
+      videoPlaceholder.style.display = 'none';
+
+      if (videoEl) videoEl.remove();
+
+      videoEl = document.createElement('video');
+      videoEl.src = url;
+      videoEl.controls = true;
+      videoEl.autoplay = true;
+      videoEl.playsInline = true;
+      videoWrapper.appendChild(videoEl);
+
+      progressBar.style.display = 'block';
+
+      videoEl.addEventListener('timeupdate', () => {
+        const t = videoEl.currentTime;
+        const dur = videoEl.duration || 1;
+        progressFill.style.width = `${(t / dur) * 100}%`;
+
+        for (let i = segments.length - 1; i >= 0; i--) {
+          if (t >= segments[i].start_time_seconds) {
+            if (activeStep !== i) {
+              setActiveStep(i);
+            }
+            break;
+          }
+        }
+      });
+    }
+
+    function seekToStep(index) {
+      if (!videoEl || !segments[index]) return;
+      videoEl.currentTime = segments[index].start_time_seconds;
+      videoEl.play();
+      setActiveStep(index);
+    }
+
+    function setActiveStep(index) {
+      activeStep = index;
+      document.querySelectorAll('.step-card').forEach((card, i) => {
+        card.classList.toggle('active', i === index);
+      });
+
+      const activeCard = document.querySelector(`.step-card[data-index="${index}"]`);
+      if (activeCard) {
+        activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  </script>
+</body>
 </html>

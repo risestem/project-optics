@@ -3,8 +3,16 @@ from utils.helpers import generate_session
 
 import modal
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 render_and_upload = modal.Function.from_name("manim-renderer", "render_and_upload")
 
@@ -28,5 +36,3 @@ async def create_lesson(request: dict):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
- 
- 
