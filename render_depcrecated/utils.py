@@ -1,9 +1,11 @@
-import os
-import subprocess
 import tempfile
-import boto3
+import subprocess
+import os
+from google.cloud import storage
+import shutil
 
 def animate_scene(scene_code, id):
+    # Always ensure import is present
     if "from manim import *" not in scene_code:
         scene_code = "from manim import *\n" + scene_code
 
@@ -17,10 +19,10 @@ def animate_scene(scene_code, id):
             'manim',
             '-qh',
             temp_file_path,
-            'LessonScene',
+            'video',
             '--media_dir', f'/tmp/{id}',
             '--output_file', f'{id}.mp4',
-            '--disable_caching',
+            '--disable_caching'
         ]
         subprocess.run(cmd, check=True)
     except Exception as e:
@@ -28,16 +30,12 @@ def animate_scene(scene_code, id):
         return None
     return f'/tmp/{id}/videos/{file_name}/1080p60/{id}.mp4'
 
-def upload_to_r2(file_path, destination_key):
+def upload_to_gcs(file_path, bucket_name, destination_blob_name):
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(destination_blob_name)
+    blob.upload_from_filename(file_path)
+    return blob.public_url
 
-    s3 = boto3.client(
-        "s3",
-        endpoint_url="https://dd67a598299321e22ac175612949d61d.r2.cloudflarestorage.com",
-        aws_access_key_id=os.environ["R2_ACCESS_KEY"],
-        aws_secret_access_key=os.environ["R2_SECRET_KEY"],
-        region_name="auto",
-    )
-
-    s3.upload_file(file_path, "optics-renders", destination_key)
-
-    return f"https://pub-5237fee679584978874e2fc440c7ef08.r2.dev/{destination_key}"
+def clear_tmp(id):
+    shutil.rmtree(f'/tmp/{id}', ignore_errors=True)

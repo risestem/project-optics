@@ -1,28 +1,34 @@
-from fastapi import FastAPI, Request, HTTPException
-from utils import animate_scene, upload_to_gcs, clear_tmp
+import modal
 
-app = FastAPI()
-
-@app.post("/render")
-async def render(request: Request):
-    data = await request.json()
-    code = data.get("code")
-    id = data.get("id")
-    if not code:
-        raise HTTPException(status_code=400, detail="Missing 'code'")
-    if not id:
-        raise HTTPException(status_code=400, detail="Missing 'id'") 
-
-    output_path = animate_scene(code, id)
-    video_url = upload_to_gcs(
-        output_path,
-        "manim-renders", 
-        f"{id}.mp4"
+manim_image = (
+    modal.Image.debian_slim()
+    .apt_install(
+        "ffmpeg",
+        "libcairo2-dev",
+        "libpango1.0-dev",
+        "texlive",
+        "texlive-latex-extra",
+        "texlive-fonts-recommended",
+        "texlive-science",
     )
+    .pip_install("manim", "boto3")
+    .add_local_file("utils.py", "/root/utils.py")
+)
 
-    clear_tmp(id)
-    return {"video_url": video_url}
+app = modal.App("manim-renderer", image=manim_image)
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+@app.function(
+    cpu=2.0,
+    memory=2048,
+    timeout=300,
+    secrets=[modal.Secret.from_name("r2-credentials")],
+)
+def render_and_upload(scene_code: str, id: str) -> str | None:
+    from utils import animate_scene, upload_to_r2
+
+    video_path = animate_scene(scene_code, id)
+    if not video_path:
+        return None
+
+    video_url = upload_to_r2(video_path, f"{id}.mp4")
+    return video_url
