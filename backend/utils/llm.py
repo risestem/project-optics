@@ -1,4 +1,6 @@
+import ast
 import json
+import re
 
 from google import genai
 from google.genai import types
@@ -48,36 +50,34 @@ The animations you describe will later be rendered by a separate model into Mani
 - When in doubt, pick the simpler visual. Minimal animations that clearly land the concept are strongly preferred over ambitious ones.
 """
 
-MANIM_SYSTEM_INSTRUCTIONS = """You are a Manim code generator. Given a complete lesson plan with multiple steps, you produce ONE runnable Manim Community Edition Python script that renders ALL segments back-to-back inside a SINGLE Scene. The resulting video will be played in a frontend that seeks to specific timestamps to jump between steps, so the timing of each segment MUST be exact.
+MANIM_SYSTEM_INSTRUCTIONS = """You are a Manim code generator. Given a complete lesson plan with multiple steps, you produce ONE runnable Manim Community Edition Python script that renders ALL segments back-to-back inside a SINGLE Scene. The resulting video will be played in a frontend that seeks to specific timestamps to jump between steps, so the timing of each segment must be exact.
 
 # OUTPUT FORMAT
-You MUST respond with ONLY raw Python code. No prose. No markdown code fences. No commentary before or after. The first line of your response MUST be a Python import statement.
+Respond with ONLY raw Python code — no prose, no markdown fences. First line MUST be `from manim import *`.
 
 # HARD REQUIREMENTS
 1. Use `from manim import *` at the top.
-2. Define exactly ONE Scene subclass named `LessonScene` with a `construct(self)` method.
-3. The script must render ALL steps from the plan, in order, inside that single `construct` method.
-4. For each step N, the cumulative scene time at the START of step N's animations MUST equal the step's `start_time_seconds`, and the cumulative scene time at the END MUST equal the step's `end_time_seconds`. Use `self.wait(...)` and animation `run_time=` arguments to hit these targets exactly.
-5. Before each step's animations begin, insert a Python comment of the form `# === STEP <n>: t=<start>s -> t=<end>s ===` so the timestamps are visible in the source.
-6. Between steps, clear the previous step's mobjects from the screen (use `FadeOut(*self.mobjects)` or equivalent) so segments don't visually pile up. The clear-out counts toward the previous step's duration, not the next step's.
-7. The total scene runtime MUST equal the plan's `total_duration_seconds`.
-8. The script MUST be self-contained and runnable with: `manim -ql script.py LessonScene`.
-9. Do NOT import anything outside of `manim` and the Python standard library.
-10. Do NOT read external files, fetch URLs, or rely on external assets (no SVGs, images, or fonts).
+2. Define exactly ONE Scene subclass named `LessonScene` with a `construct(self)` method. Every animation call (`self.play`, `self.wait`, `self.add`, etc.) MUST live inside that method — never at module scope.
+3. Render ALL steps from the plan, in order, inside that single `construct` method.
+4. For each step N, the cumulative scene time at the START must equal `start_time_seconds` and at the END must equal `end_time_seconds`. Use `self.wait(...)` and `run_time=` values to land on the targets exactly.
+5. Before each step's animations, insert `# === STEP <n>: t=<start>s -> t=<end>s ===`.
+6. Steps MUST flow continuously. DO NOT fade to black between steps and DO NOT `FadeOut(*self.mobjects)` at the end of a step. Carry persistent elements (main diagram, axes, key labels) forward so the next step builds on what is already on screen. Only remove a specific mobject when the next step genuinely no longer needs it, and do it overlapped with new elements entering. The final step may clear all mobjects only if it is the last step in the lesson.
+7. REUSE EXISTING MOBJECTS. If a shape or label is already on screen from an earlier step, reuse the existing Python variable — do not construct a new `Polygon`/`Square`/`MathTex` with the same geometry. Never animate `Create`/`FadeIn`/`Write` on a mobject already visible. To modify an existing mobject, use `.animate` (e.g. `square.animate.set_color(RED)`) or `Transform(existing, target)`.
+8. Total scene runtime MUST equal the plan's `total_duration_seconds`.
+9. Script must be self-contained and runnable with `manim -ql script.py LessonScene`. Import only `manim` and the Python standard library. No external files, URLs, or assets.
 
-# MINIMALISM RULES (CRITICAL — animations must be cheap to render)
-- Keep each segment as SIMPLE as possible while still conveying the idea. Render time and resource cost matter, and the whole script renders as one video.
-- Use no more than 5-6 mobjects on screen at any time.
-- Prefer basic primitives: `Circle`, `Square`, `Rectangle`, `Line`, `Arrow`, `Dot`, `Text`, `MathTex`.
-- Avoid: 3D scenes, `ThreeDScene`, complex `ValueTracker` chains, heavy `updater` functions, particle effects, long `Transform` sequences, and more than ~6 animation calls per step.
-- Prefer `Create`, `Write`, `FadeIn`, `FadeOut`, `Transform` over exotic animation classes.
-- Use short `run_time` values (0.5-2 seconds per animation call) and fill remaining time with `self.wait()` to land exactly on each step's `end_time_seconds`.
-- Use plain colors (`BLUE`, `RED`, `GREEN`, `WHITE`, `YELLOW`). No gradients, no custom shaders.
-- No voiceovers, no sound, no camera movement unless absolutely required.
+# MINIMALISM
+- At most 5-6 mobjects on screen at any time.
+- Primitives only: `Circle`, `Square`, `Rectangle`, `Line`, `Arrow`, `Dot`, `Text`, `MathTex`. Plain colors (`BLUE`, `RED`, `GREEN`, `WHITE`, `YELLOW`).
+- At most ~6 animation calls per step. Prefer `Create`, `Write`, `FadeIn`, `FadeOut`, `Transform`.
+- Avoid 3D scenes, heavy `updater` functions, `ValueTracker` chains, and particle effects.
+- Animations must feel SNAPPY. `run_time` between 0.3 and 0.8 seconds per call (never above 1.0). Fill remaining step time with a single trailing `self.wait(...)` so the viewer has time to read.
+- The first visual change in a new step should start within ~0.5 seconds of the step. No long leading `self.wait()`.
+- No voiceovers, sound, or camera moves.
 
 # STYLE
 - Clear variable names. No comments other than the required `# === STEP ... ===` markers.
-- Keep the entire script under ~150 lines total even with many steps.
+- Keep under ~150 lines total.
 """
 
 
@@ -92,6 +92,73 @@ def generate_plan(topic):
                 )
 
     return response.text
+
+
+def _extract_code(raw):
+    match = re.search(r"```(?:python)?\s*\n(.*?)```", raw, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    start = raw.find("from manim")
+    if start == -1:
+        start = raw.find("import manim")
+    if start != -1:
+        raw = raw[start:]
+    return raw.strip()
+
+
+def _sanitize_manim_code(code):
+    """Fix mechanical mistakes the LLM commonly makes in generated Manim scripts.
+
+    - Rewrites `self.wait(0)` / `run_time=0` to `0.1` (Manim rejects non-positive durations).
+    - Drops stray top-level statements (e.g. an orphaned `self.wait(...)` outside the class),
+      which `ast.parse` alone can't catch because they're syntactically valid but blow up at
+      import time with NameError.
+    """
+    code = re.sub(r"self\.wait\(\s*0(?:\.0+)?\s*\)", "self.wait(0.1)", code)
+    code = re.sub(r"run_time\s*=\s*0(?:\.0+)?(?=\s*[,)])", "run_time=0.1", code)
+
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        lines = code.split("\n")
+        while lines:
+            lines.pop()
+            try:
+                tree = ast.parse("\n".join(lines))
+                code = "\n".join(lines)
+                break
+            except SyntaxError:
+                continue
+        else:
+            return code
+
+    allowed = (
+        ast.Import,
+        ast.ImportFrom,
+        ast.ClassDef,
+        ast.FunctionDef,
+        ast.AsyncFunctionDef,
+        ast.Assign,
+        ast.AnnAssign,
+        ast.If,
+    )
+    drop_lines = set()
+    for node in tree.body:
+        if isinstance(node, allowed):
+            continue
+        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+            continue  # module docstring
+        end = node.end_lineno or node.lineno
+        for ln in range(node.lineno, end + 1):
+            drop_lines.add(ln)
+
+    if drop_lines:
+        source_lines = code.split("\n")
+        code = "\n".join(
+            line for i, line in enumerate(source_lines, start=1) if i not in drop_lines
+        )
+
+    return code.strip()
 
 
 def generate_manim_code(instructions):
@@ -158,14 +225,8 @@ def generate_manim_code(instructions):
         contents=prompt,
     )
 
-    code = response.text.strip()
-    if code.startswith("```"):
-        code = code.split("\n", 1)[1] if "\n" in code else code
-    if code.endswith("```"):
-        code = code[:-3]
-    code = code.strip()
-    if code.startswith("python\n"):
-        code = code[len("python\n"):]
+    code = _extract_code(response.text)
+    code = _sanitize_manim_code(code)
 
     return {
         "topic": topic,
