@@ -17,7 +17,8 @@ promptForm.addEventListener("submit", async (e) => {
     const topic = promptInput.value.trim();
     if (!topic) return;
 
-    showLoading();
+    promptInput.value = "";
+    showLoading(topic);
 
     try {
         const res = await fetch(`${API_URL}/lesson`, {
@@ -41,8 +42,9 @@ promptForm.addEventListener("submit", async (e) => {
     }
 });
 
-function showLoading() {
+function showLoading(topic) {
     stepsContainer.innerHTML = `
+        <div class="topic-label loading-topic">${topic}</div>
         <div class="loading-container">
           <div class="loading-logo">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 981 508" fill="none">
@@ -51,7 +53,8 @@ function showLoading() {
               <path class="dot dot-3" fill="currentColor" fill-rule="evenodd" d="M 877 24 L 870 30 L 864 49 L 866 86 L 875 122 L 892 158 L 908 182 L 921 195 L 939 205 L 946 205 L 955 195 L 960 175 L 959 145 L 947 101 L 934 72 L 916 45 L 895 27 L 884 23 Z M 878 28 L 883 27 L 895 32 L 912 47 L 928 70 L 943 102 L 951 127 L 956 152 L 955 181 L 953 189 L 945 201 L 940 201 L 929 195 L 912 180 L 897 158 L 881 126 L 873 100 L 868 70 L 869 44 L 873 33 Z M 917 16 L 906 8 L 890 1 L 869 2 L 717 58 L 595 106 L 584 112 L 574 126 L 569 144 L 568 176 L 571 201 L 577 227 L 587 253 L 600 278 L 619 304 L 633 317 L 648 326 L 662 330 L 678 330 L 929 235 L 962 221 L 972 209 L 979 187 L 980 147 L 977 124 L 969 97 L 955 66 L 934 34 Z M 915 20 L 931 37 L 949 64 L 963 93 L 972 120 L 976 148 L 975 186 L 971 201 L 965 212 L 959 218 L 681 325 L 662 326 L 654 324 L 639 316 L 626 305 L 611 287 L 597 264 L 584 235 L 578 215 L 573 186 L 572 154 L 577 130 L 586 116 L 601 108 L 726 59 L 870 6 L 889 5 L 901 10 Z"/>
             </svg>
           </div>
-          <span class="loading-text">Generating lesson...</span>
+          <h3 class="loading-title">Generating lesson</h3>
+          <p class="loading-subtitle">Hold tight while we build your animation.</p>
         </div>
       `;
     videoPlaceholder.querySelector("span").textContent =
@@ -60,7 +63,7 @@ function showLoading() {
 
 function showError(msg) {
     stepsContainer.innerHTML = `
-        <div class="empty-state">
+        <div class="empty-state error-state">
           <div class="empty-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
           </div>
@@ -102,10 +105,14 @@ function loadVideo(url) {
 
     videoEl = document.createElement("video");
     videoEl.src = url;
-    videoEl.controls = true;
     videoEl.autoplay = true;
     videoEl.playsInline = true;
     videoWrapper.appendChild(videoEl);
+
+    videoEl.addEventListener("click", () => {
+        if (videoEl.paused) videoEl.play();
+        else videoEl.pause();
+    });
 
     progressBar.style.display = "block";
 
