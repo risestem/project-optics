@@ -78,18 +78,19 @@ Respond with ONLY raw Python code — no prose, no markdown fences. First line M
 # STYLE
 - Clear variable names. No comments other than the required `# === STEP ... ===` markers.
 - Keep under ~150 lines total.
+- The scene background MUST match the frontend (`#11121d`). As the first line inside `construct`, set `self.camera.background_color = "#11121d"` before any animations.
 """
 
 
 def generate_plan(topic):
     response = client.models.generate_content(
-            model="gemini-3-flash-preview",
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_INSTRUCTIONS,
-                response_mime_type="application/json",
-            ),
-            contents=f"Topic to explain: {topic}",
-                )
+        model="gemini-3-flash-preview",
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_INSTRUCTIONS,
+            response_mime_type="application/json",
+        ),
+        contents=f"Topic to explain: {topic}",
+    )
 
     return response.text
 
@@ -146,7 +147,11 @@ def _sanitize_manim_code(code):
     for node in tree.body:
         if isinstance(node, allowed):
             continue
-        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+        if (
+            isinstance(node, ast.Expr)
+            and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)
+        ):
             continue  # module docstring
         end = node.end_lineno or node.lineno
         for ln in range(node.lineno, end + 1):
@@ -234,5 +239,3 @@ def generate_manim_code(instructions):
         "manim_code": code,
         "segments": segments,
     }
-
-
