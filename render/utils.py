@@ -32,10 +32,10 @@ def create_light_version(video_path, output_path):
     # Mirrors the CSS: filter: invert(1) hue-rotate(180deg) brightness(0.91)
     # 1. negate = invert(1)
     # 2. hue=H=PI = hue-rotate(180deg)
-    # 3. lutrgb = brightness(0.91) — multiplies each RGB channel by 0.91
+    # 3. eq=brightness=-0.09 approximates brightness(0.91) for the output range
     cmd = [
         'ffmpeg', '-y', '-i', video_path,
-        '-vf', 'negate,hue=H=PI,lutrgb=r=val*0.91:g=val*0.91:b=val*0.91',
+        '-vf', 'negate,hue=H=PI,eq=brightness=-0.09',
         '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
         '-c:a', 'copy',
         output_path,
