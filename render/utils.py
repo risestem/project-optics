@@ -29,16 +29,19 @@ def animate_scene(scene_code, id):
     return f'/tmp/{id}/videos/{file_name}/1080p60/{id}.mp4'
 
 def create_light_version(video_path, output_path):
-    # Negate (invert), hue-rotate 180° to correct colors,
-    # then remap output range so inverted bg (#eeede2) maps to target bg (#d5d6db)
-    # Target: R=213/255≈0.835, G=214/255≈0.839, B=219/255≈0.859
+    # 1. negate: inverts colors (#11121d bg → #eeede2)
+    # 2. hue=H=PI: rotate hue 180° to restore accent colors
+    # 3. curves: remap so white point lands at #d5d6db
+    #    Input bg after negate: R≈0.933 G≈0.929 B≈0.886
+    #    Target bg: R=0.835 G=0.839 B=0.859
+    #    Black stays black (0/0), bg maps to target (in/out per channel)
     vf = (
         'negate,'
         'hue=H=PI,'
-        'colorlevels='
-        'romin=0:romax=0.835:'
-        'gomin=0:gomax=0.839:'
-        'bomin=0:bomax=0.859'
+        'curves='
+        'r=\'0/0 0.933/0.835 1/0.9\':'
+        'g=\'0/0 0.929/0.839 1/0.9\':'
+        'b=\'0/0 0.886/0.859 1/0.92\''
     )
     cmd = [
         'ffmpeg', '-y', '-i', video_path,
