@@ -29,13 +29,13 @@ def animate_scene(scene_code, id):
     return f'/tmp/{id}/videos/{file_name}/1080p60/{id}.mp4'
 
 def create_light_version(video_path, output_path):
-    # Mirrors the CSS: filter: invert(1) hue-rotate(180deg) brightness(0.91)
-    # 1. negate = invert(1)
-    # 2. hue=H=PI = hue-rotate(180deg)
-    # 3. eq=brightness=-0.09 approximates brightness(0.91) for the output range
+    # 1. negate: #11121d → #eeede2 (RGB 238,237,226)
+    # 2. hue=H=PI: rotate hue 180° to restore accent colors
+    # 3. colorchannelmixer: scale each channel to map #eeede2 → #d5d6db
+    #    R: 213/238=0.895, G: 214/237=0.903, B: 219/226=0.969
     cmd = [
         'ffmpeg', '-y', '-i', video_path,
-        '-vf', 'negate,hue=H=PI,eq=brightness=-0.09',
+        '-vf', 'negate,hue=H=PI,colorchannelmixer=rr=0.895:gg=0.903:bb=0.969',
         '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
         '-c:a', 'copy',
         output_path,
