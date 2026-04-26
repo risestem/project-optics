@@ -11,6 +11,56 @@ const progressFill = document.getElementById("progressFill");
 let videoEl = null;
 let segments = [];
 let activeStep = -1;
+let currentVideoUrl = null;
+
+/* Settings dropdown toggle */
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsDropdown = document.getElementById("settingsDropdown");
+
+settingsBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = settingsBtn.classList.toggle("active");
+    settingsDropdown.classList.toggle("open", isOpen);
+});
+
+document.addEventListener("click", (e) => {
+    if (!e.target.closest(".settings-wrapper")) {
+        settingsBtn.classList.remove("active");
+        settingsDropdown.classList.remove("open");
+    }
+});
+
+/* Theme toggle */
+const themeToggle = document.getElementById("themeToggle");
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme === "light") {
+    document.documentElement.setAttribute("data-theme", "light");
+    themeToggle.classList.add("active");
+}
+
+themeToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isLight = themeToggle.classList.toggle("active");
+
+    document.body.classList.add("theme-transitioning");
+    if (isLight) {
+        document.documentElement.setAttribute("data-theme", "light");
+        localStorage.setItem("theme", "light");
+    } else {
+        document.documentElement.removeAttribute("data-theme");
+        localStorage.setItem("theme", "dark");
+    }
+    if (videoEl && currentVideoUrl) {
+        const wasPlaying = !videoEl.paused;
+        const time = videoEl.currentTime;
+        videoEl.src = isLight
+            ? currentVideoUrl.replace(".mp4", "-light.mp4")
+            : currentVideoUrl;
+        videoEl.currentTime = time;
+        if (wasPlaying) videoEl.play();
+    }
+    setTimeout(() => document.body.classList.remove("theme-transitioning"), 450);
+});
 
 promptForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -58,7 +108,7 @@ function showLoading(topic) {
         </div>
       `;
     videoPlaceholder.querySelector("span").textContent =
-        "Rendering animation...";
+        "Rendering animation…";
 }
 
 function showError(msg) {
@@ -103,8 +153,10 @@ function loadVideo(url) {
 
     if (videoEl) videoEl.remove();
 
+    currentVideoUrl = url;
+    const isLight = document.documentElement.getAttribute("data-theme") === "light";
     videoEl = document.createElement("video");
-    videoEl.src = url;
+    videoEl.src = isLight ? url.replace(".mp4", "-light.mp4") : url;
     videoEl.autoplay = true;
     videoEl.playsInline = true;
     videoWrapper.appendChild(videoEl);

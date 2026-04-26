@@ -28,6 +28,21 @@ def animate_scene(scene_code, id):
         return None
     return f'/tmp/{id}/videos/{file_name}/1080p60/{id}.mp4'
 
+def create_light_version(video_path, output_path):
+    cmd = [
+        'ffmpeg', '-y', '-i', video_path,
+        '-vf', 'negate,hue=H=PI,eq=brightness=0.05',
+        '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
+        '-c:a', 'copy',
+        output_path,
+    ]
+    try:
+        subprocess.run(cmd, check=True, capture_output=True)
+        return output_path
+    except Exception as e:
+        print(f"Light mode conversion error: {e}")
+        return None
+
 def upload_to_r2(file_path, destination_key):
 
     s3 = boto3.client(

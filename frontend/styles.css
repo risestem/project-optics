@@ -28,6 +28,51 @@
     --crust: #06070c;
 }
 
+[data-theme="light"] {
+    /* Tokyo Night Light */
+    --rosewater: #f5e0dc;
+    --flamingo: #d63e6c;
+    --pink: #b946a8;
+    --mauve: #7847bd;
+    --red: #c0302e;
+    --maroon: #b4434e;
+    --peach: #b15c00;
+    --yellow: #8f6a18;
+    --green: #4e7a2d;
+    --teal: #118c8e;
+    --sky: #118c8e;
+    --sapphire: #3660c1;
+    --blue: #3660c1;
+    --lavender: #9266d0;
+    --text: #1a1e33;
+    --subtext1: #2e3450;
+    --subtext0: #434968;
+    --overlay2: #6a7194;
+    --overlay1: #8189aa;
+    --overlay0: #959dbd;
+    --surface2: #c4c8dd;
+    --surface1: #d8dbed;
+    --surface0: #e4e7f4;
+    --base: #d5d6db;
+    --mantle: #e9eaf0;
+    --crust: #f0f1f5;
+}
+
+[data-theme="light"] .search-box input {
+    background: #fff;
+    border-color: var(--surface2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .search-box input:focus {
+    border-color: var(--mauve);
+    box-shadow: 0 0 0 3px rgba(120, 71, 189, 0.12);
+}
+
+[data-theme="light"] .settings-dropdown {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -41,6 +86,12 @@ body {
     height: 100vh;
     overflow: hidden;
     display: flex;
+}
+
+/* Only animate theme transitions while switching — removed after to avoid perf hit */
+body.theme-transitioning,
+body.theme-transitioning *:not(svg *) {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 .sidebar {
@@ -97,6 +148,173 @@ body {
     border-radius: 4px;
     background: var(--mauve);
     color: var(--crust);
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+}
+
+.header-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--overlay2);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    text-decoration: none;
+}
+
+.header-btn:hover {
+    background: var(--surface1);
+    color: var(--text);
+}
+
+.header-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Settings wrapper for positioning dropdown */
+.settings-wrapper {
+    position: relative;
+}
+
+/* Cog spin */
+#settingsBtn svg {
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#settingsBtn.active svg {
+    transform: rotate(120deg);
+}
+
+#settingsBtn.active {
+    background: var(--surface1);
+    color: var(--text);
+}
+
+/* Settings dropdown */
+.settings-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 220px;
+    background: var(--surface0);
+    border: 1px solid var(--surface2);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+    transform-origin: top right;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 100;
+}
+
+.settings-dropdown.open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.settings-dropdown-content {
+    padding: 8px;
+}
+
+/* Settings menu item */
+.settings-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 8px;
+}
+
+.settings-item-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+}
+
+/* Sun/Moon toggle switch */
+.theme-toggle {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.theme-toggle-track {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    background: var(--surface2);
+    border-radius: 14px;
+    transition: background 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px;
+}
+
+.theme-toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    background: var(--mantle);
+    border-radius: 50%;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 2;
+}
+
+.theme-toggle.active .theme-toggle-track {
+    background: var(--yellow);
+}
+
+.theme-toggle.active .theme-toggle-thumb {
+    transform: translateX(24px);
+    background: #fff;
+}
+
+.theme-icon {
+    width: 14px;
+    height: 14px;
+    position: relative;
+    z-index: 1;
+    transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sun-icon {
+    color: var(--overlay2);
+    opacity: 0.5;
+    transform: rotate(-30deg) scale(0.8);
+}
+
+.moon-icon {
+    color: var(--overlay2);
+    opacity: 1;
+}
+
+.theme-toggle.active .sun-icon {
+    color: var(--mantle);
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.theme-toggle.active .moon-icon {
+    opacity: 0;
+    transform: rotate(30deg) scale(0.8);
 }
 
 .search-box {
