@@ -29,13 +29,14 @@ def animate_scene(scene_code, id):
     return f'/tmp/{id}/videos/{file_name}/1080p60/{id}.mp4'
 
 def create_light_version(video_path, output_path):
-    # 1. negate: #11121d → #eeede2 (RGB 238,237,226)
+    # 1. negate: invert colors (#11121d bg → #eeede2)
     # 2. hue=H=PI: rotate hue 180° to restore accent colors
-    # 3. colorchannelmixer: scale each channel to map #eeede2 → #d5d6db
+    # 3. colorchannelmixer: scale per-channel to map #eeede2 → #d5d6db
     #    R: 213/238=0.895, G: 214/237=0.903, B: 219/226=0.969
+    # 4. format=yuv420p: ensure pixel format is compatible with libx264
     cmd = [
         'ffmpeg', '-y', '-i', video_path,
-        '-vf', 'negate,hue=H=PI,colorchannelmixer=rr=0.895:gg=0.903:bb=0.969',
+        '-vf', 'negate,hue=H=PI,colorchannelmixer=rr=0.895:gg=0.903:bb=0.969,format=yuv420p',
         '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
         '-c:a', 'copy',
         output_path,
