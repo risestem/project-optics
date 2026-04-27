@@ -88,10 +88,22 @@ body {
     display: flex;
 }
 
-/* Only animate theme transitions while switching — removed after to avoid perf hit */
-body.theme-transitioning,
-body.theme-transitioning *:not(svg *) {
-    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+/* Theme transition — View Transition API, radial from top-right */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+::view-transition-new(root) {
+    clip-path: circle(0% at 100% 0%);
+    animation: theme-reveal 1s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+@keyframes theme-reveal {
+    to {
+        clip-path: circle(150% at 100% 0%);
+    }
 }
 
 .sidebar {

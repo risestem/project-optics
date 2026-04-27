@@ -77,7 +77,7 @@ Respond with ONLY raw Python code — no prose, no markdown fences. First line M
 
 # STYLE
 - Clear variable names. No comments other than the required `# === STEP ... ===` markers.
-- Keep under ~150 lines total.
+- Keep under ~150 lines total. 
 - The scene background MUST match the frontend (`#11121d`). As the first line inside `construct`, set `self.camera.background_color = "#11121d"` before any animations.
 """
 

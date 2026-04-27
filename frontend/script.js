@@ -42,24 +42,30 @@ themeToggle.addEventListener("click", (e) => {
     e.stopPropagation();
     const isLight = themeToggle.classList.toggle("active");
 
-    document.body.classList.add("theme-transitioning");
-    if (isLight) {
-        document.documentElement.setAttribute("data-theme", "light");
-        localStorage.setItem("theme", "light");
+    const applyTheme = () => {
+        if (isLight) {
+            document.documentElement.setAttribute("data-theme", "light");
+            localStorage.setItem("theme", "light");
+        } else {
+            document.documentElement.removeAttribute("data-theme");
+            localStorage.setItem("theme", "dark");
+        }
+        if (videoEl && currentVideoUrl) {
+            const wasPlaying = !videoEl.paused;
+            const time = videoEl.currentTime;
+            videoEl.src = isLight
+                ? currentVideoUrl.replace(".mp4", "-light.mp4")
+                : currentVideoUrl;
+            videoEl.currentTime = time;
+            if (wasPlaying) videoEl.play();
+        }
+    };
+
+    if (document.startViewTransition) {
+        document.startViewTransition(applyTheme);
     } else {
-        document.documentElement.removeAttribute("data-theme");
-        localStorage.setItem("theme", "dark");
+        applyTheme();
     }
-    if (videoEl && currentVideoUrl) {
-        const wasPlaying = !videoEl.paused;
-        const time = videoEl.currentTime;
-        videoEl.src = isLight
-            ? currentVideoUrl.replace(".mp4", "-light.mp4")
-            : currentVideoUrl;
-        videoEl.currentTime = time;
-        if (wasPlaying) videoEl.play();
-    }
-    setTimeout(() => document.body.classList.remove("theme-transitioning"), 450);
 });
 
 promptForm.addEventListener("submit", async (e) => {
