@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Optics — Beta Coming Soon</title>
+        <meta name="description" content="Optics beta launches May 2." />
+        <link rel="icon" href="../public/favicon.ico" type="image/x-icon" />
+        <link rel="apple-touch-icon" href="../public/favicon.ico" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500;600&family=Pixelify+Sans:wght@400..700&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            :root {
+                --rosewater: #f5e0dc;
+                --flamingo: #ee6d85;
+                --pink: #d57eeb;
+                --mauve: #a485dd;
+                --red: #ee6d85;
+                --peach: #f6955b;
+                --yellow: #d7a65f;
+                --green: #95c561;
+                --teal: #63cdcf;
+                --sapphire: #7199ee;
+                --blue: #7199ee;
+                --lavender: #bda0f0;
+                --text: #a0a8cd;
+                --subtext1: #8b94bd;
+                --subtext0: #7680a3;
+                --overlay2: #626a8a;
+                --overlay1: #525a78;
+                --overlay0: #424a66;
+                --surface2: #2e2f45;
+                --surface1: #232438;
+                --surface0: #171824;
+                --base: #11121d;
+                --mantle: #0b0c14;
+                --crust: #06070c;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+                height: 100%;
+            }
+
+            body {
+                font-family: "DM Sans", sans-serif;
+                background: var(--base);
+                color: var(--text);
+                min-height: 100vh;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                padding: 24px;
+            }
+
+            /* Subtle radial backdrop */
+            body::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background:
+                    radial-gradient(
+                        ellipse 60% 50% at 50% 30%,
+                        rgba(164, 133, 221, 0.12),
+                        transparent 70%
+                    ),
+                    radial-gradient(
+                        ellipse 80% 60% at 50% 100%,
+                        rgba(113, 153, 238, 0.08),
+                        transparent 70%
+                    );
+                pointer-events: none;
+                z-index: 0;
+            }
+
+            /* Faint grid */
+            body::after {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background-image:
+                    linear-gradient(var(--surface0) 1px, transparent 1px),
+                    linear-gradient(
+                        90deg,
+                        var(--surface0) 1px,
+                        transparent 1px
+                    );
+                background-size: 48px 48px;
+                background-position: -1px -1px;
+                mask-image: radial-gradient(
+                    ellipse 70% 60% at 50% 50%,
+                    rgba(0, 0, 0, 0.4),
+                    transparent 75%
+                );
+                -webkit-mask-image: radial-gradient(
+                    ellipse 70% 60% at 50% 50%,
+                    rgba(0, 0, 0, 0.4),
+                    transparent 75%
+                );
+                opacity: 0.5;
+                pointer-events: none;
+                z-index: 0;
+            }
+
+            .container {
+                position: relative;
+                z-index: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                max-width: 720px;
+                width: 100%;
+                animation: fade-up 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) both;
+            }
+
+            @keyframes fade-up {
+                from {
+                    opacity: 0;
+                    transform: translateY(12px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .logo-row {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                margin-bottom: 36px;
+            }
+
+            .logo-img {
+                width: 64px;
+                height: 64px;
+                object-fit: contain;
+                image-rendering: pixelated;
+                image-rendering: crisp-edges;
+            }
+
+            .logo-text {
+                font-family: "Pixelify Sans", "DM Sans", sans-serif;
+                font-size: 32px;
+                font-weight: 600;
+                letter-spacing: 0.5px;
+                color: var(--text);
+            }
+
+            .beta-tag {
+                font-family: "JetBrains Mono", monospace;
+                font-size: 10px;
+                font-weight: 600;
+                letter-spacing: 0.8px;
+                padding: 3px 7px;
+                border-radius: 4px;
+                background: var(--mauve);
+                color: var(--crust);
+                margin-left: 6px;
+                align-self: center;
+            }
+
+            h1 {
+                font-family: "DM Sans", sans-serif;
+                font-size: clamp(32px, 6vw, 56px);
+                font-weight: 600;
+                line-height: 1.1;
+                letter-spacing: -0.02em;
+                color: var(--rosewater);
+                margin-bottom: 16px;
+            }
+
+            h1 .accent {
+                background: linear-gradient(
+                    135deg,
+                    var(--mauve) 0%,
+                    var(--lavender) 50%,
+                    var(--sapphire) 100%
+                );
+                -webkit-background-clip: text;
+                background-clip: text;
+                -webkit-text-fill-color: transparent;
+                color: transparent;
+            }
+
+            .subtitle {
+                font-size: clamp(14px, 2vw, 16px);
+                color: var(--subtext0);
+                margin-bottom: 48px;
+                font-family: "JetBrains Mono", monospace;
+                letter-spacing: 0.05em;
+            }
+
+            .subtitle .date {
+                color: var(--text);
+                font-weight: 500;
+            }
+
+            .countdown {
+                display: flex;
+                gap: 12px;
+                flex-wrap: wrap;
+                justify-content: center;
+                margin-bottom: 16px;
+            }
+
+            .unit {
+                background: var(--mantle);
+                border: 1px solid var(--surface0);
+                border-radius: 14px;
+                padding: 20px 24px;
+                min-width: 96px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+                transition:
+                    border-color 0.3s ease,
+                    transform 0.3s ease;
+            }
+
+            .unit:hover {
+                border-color: var(--surface2);
+                transform: translateY(-2px);
+            }
+
+            .unit-value {
+                font-family: "JetBrains Mono", monospace;
+                font-size: clamp(28px, 5vw, 40px);
+                font-weight: 600;
+                color: var(--rosewater);
+                line-height: 1;
+                font-variant-numeric: tabular-nums;
+            }
+
+            .unit-label {
+                font-family: "JetBrains Mono", monospace;
+                font-size: 10px;
+                font-weight: 500;
+                letter-spacing: 0.15em;
+                text-transform: uppercase;
+                color: var(--overlay2);
+            }
+
+            .launched {
+                font-family: "JetBrains Mono", monospace;
+                font-size: 14px;
+                color: var(--green);
+                padding: 14px 22px;
+                border: 1px solid var(--surface0);
+                border-radius: 12px;
+                background: var(--mantle);
+            }
+
+            .footer {
+                position: absolute;
+                bottom: 24px;
+                left: 0;
+                right: 0;
+                display: flex;
+                justify-content: center;
+                gap: 18px;
+                font-family: "JetBrains Mono", monospace;
+                font-size: 11px;
+                color: var(--overlay1);
+                z-index: 1;
+                letter-spacing: 0.05em;
+            }
+
+            .footer a {
+                color: var(--overlay2);
+                text-decoration: none;
+                transition: color 0.15s ease;
+            }
+
+            .footer a:hover {
+                color: var(--text);
+            }
+
+            @media (max-width: 540px) {
+                .unit {
+                    min-width: 76px;
+                    padding: 16px 14px;
+                }
+                .countdown {
+                    gap: 8px;
+                }
+                .logo-row {
+                    margin-bottom: 28px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="logo-row">
+                <img
+                    src="../public/Sticker.svg"
+                    alt="Optics"
+                    class="logo-img"
+                />
+                <span class="logo-text">optics</span>
+                <span class="beta-tag">BETA</span>
+            </div>
+
+            <h1>Coming <span class="accent">soon</span>.</h1>
+            <p class="subtitle">
+                BETA LAUNCHES <span class="date">MAY 2, 2026</span>
+            </p>
+
+            <div class="countdown" id="countdown" aria-live="polite">
+                <div class="unit">
+                    <span class="unit-value" id="days">00</span>
+                    <span class="unit-label">Days</span>
+                </div>
+                <div class="unit">
+                    <span class="unit-value" id="hours">00</span>
+                    <span class="unit-label">Hours</span>
+                </div>
+                <div class="unit">
+                    <span class="unit-value" id="minutes">00</span>
+                    <span class="unit-label">Minutes</span>
+                </div>
+                <div class="unit">
+                    <span class="unit-value" id="seconds">00</span>
+                    <span class="unit-label">Seconds</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span>© RISE</span>
+            <a
+                href="https://github.com/risestem/project-optics"
+                target="_blank"
+                rel="noopener noreferrer"
+                >GitHub</a
+            >
+        </div>
+
+        <script>
+            const target = new Date("2026-05-02T00:00:00").getTime();
+            const $days = document.getElementById("days");
+            const $hours = document.getElementById("hours");
+            const $minutes = document.getElementById("minutes");
+            const $seconds = document.getElementById("seconds");
+            const $countdown = document.getElementById("countdown");
+
+            const pad = (n) => String(n).padStart(2, "0");
+
+            function tick() {
+                const diff = target - Date.now();
+                if (diff <= 0) {
+                    $countdown.innerHTML =
+                        '<div class="launched">// beta is live →</div>';
+                    return false;
+                }
+                const days = Math.floor(diff / 86400000);
+                const hours = Math.floor((diff / 3600000) % 24);
+                const minutes = Math.floor((diff / 60000) % 60);
+                const seconds = Math.floor((diff / 1000) % 60);
+                $days.textContent = pad(days);
+                $hours.textContent = pad(hours);
+                $minutes.textContent = pad(minutes);
+                $seconds.textContent = pad(seconds);
+                return true;
+            }
+
+            tick();
+            const interval = setInterval(() => {
+                if (!tick()) clearInterval(interval);
+            }, 1000);
+        </script>
+    </body>
+</html>
