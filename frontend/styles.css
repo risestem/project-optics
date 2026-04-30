@@ -540,6 +540,27 @@ body {
     transition:
         background 0.15s,
         border-color 0.15s;
+    animation: step-drop 0.55s cubic-bezier(0.34, 1.56, 0.4, 1) backwards;
+    animation-delay: calc(var(--step-index, 0) * 90ms + 180ms);
+    transform-origin: top center;
+}
+
+@keyframes step-drop {
+    0% {
+        opacity: 0;
+        transform: translateY(-22px) scale(0.96);
+    }
+    60% {
+        opacity: 1;
+        transform: translateY(3px) scale(1.02);
+    }
+    80% {
+        transform: translateY(-1px) scale(0.995);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .step-card:hover {

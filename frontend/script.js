@@ -138,7 +138,7 @@ function renderSteps(topic, steps) {
         const timestamp = `${startMin}:${startSec}`;
 
         html += `
-          <div class="step-card${i === 0 ? " active" : ""}" data-index="${i}" onclick="seekToStep(${i})">
+          <div class="step-card${i === 0 ? " active" : ""}" data-index="${i}" style="--step-index: ${i}" onclick="seekToStep(${i})">
             <div class="step-top">
               <div class="step-indicator">${step.step_number}</div>
               <span class="step-timestamp">${timestamp}</span>
